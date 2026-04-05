@@ -1,36 +1,114 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Movie Quest
+
+> Level up your film taste
+
+Movie Quest is a gamified movie tracking web app. Track the movies you watch, earn XP, unlock badges, and climb the ranks from Movie Rookie to Cinema Legend.
+
+## Tech Stack
+
+- **Next.js 15** (App Router)
+- **TypeScript**
+- **Tailwind CSS** (dark theme)
+- **Prisma** + SQLite
+- **NextAuth** (Google OAuth)
+- **TMDB API** integration ready
 
 ## Getting Started
 
-First, run the development server:
+### 1. Install dependencies
+
+```bash
+npm install
+```
+
+### 2. Set up environment
+
+Create `.env.local` (or edit `.env`):
+
+```env
+DATABASE_URL="file:./dev.db"
+NEXTAUTH_SECRET="your-secret-here"
+NEXTAUTH_URL="http://localhost:3000"
+GOOGLE_CLIENT_ID="your-google-client-id"
+GOOGLE_CLIENT_SECRET="your-google-client-secret"
+TMDB_API_KEY="your-tmdb-api-key"
+```
+
+### 3. Set up database
+
+```bash
+npx prisma generate
+npx prisma db push
+```
+
+### 4. Run dev server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+  app/                    # Next.js App Router pages
+    api/                  # API routes
+      auth/[...nextauth]/ # NextAuth handler
+      films/              # Films API
+      watch/              # Mark watched API
+      watchlist/          # Watchlist API
+      dashboard/         # Dashboard stats API
+    movies/              # Movies browse page
+      [id]/              # Movie detail page
+    dashboard/           # User dashboard
+    watchlist/           # User watchlist
+  components/            # React components
+  lib/                   # Utilities
+    auth.ts              # NextAuth config
+    prisma.ts            # Prisma client
+    gamification.ts      # XP/level calculations
+    data.ts              # Film data + badges
+  generated/prisma/     # Prisma generated client
+```
 
-## Learn More
+## Features
 
-To learn more about Next.js, take a look at the following resources:
+- Browse 20 curated famous films
+- Filter by genre or Oscar winners
+- Mark films as watched to earn XP
+- Add films to watchlist for later
+- Earn badges based on achievements
+- Level up as you watch more films
+- Dashboard with XP progress and stats
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Gamification
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Action | XP |
+|--------|-----|
+| Watch a film | 100 XP |
+| Watch an Oscar winner | +50 XP bonus |
 
-## Deploy on Vercel
+### Levels
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Level | Title |
+|-------|-------|
+| 1 | Movie Rookie |
+| 2 | Movie Fan |
+| 3 | Film Enthusiast |
+| 5 | Movie Buff |
+| 7 | Film Connoisseur |
+| 10+ | Cinema Legend |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Design
+
+Dark cinema aesthetic inspired by Letterboxd:
+- Background: `#0a0a0a`
+- Cards: `#1a1a1a`
+- Gold accent: `#F5C518` (IMDB gold)
+- Carbon-style borders, no gradients or shadows
+
+## License
+
+MIT
