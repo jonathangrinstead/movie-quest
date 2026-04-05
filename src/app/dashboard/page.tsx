@@ -1,43 +1,69 @@
-import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { Film, Award, Zap, Flame, Trophy, Lock } from "lucide-react";
 import { getLevel, getXPProgress, getLevelTitle } from "@/lib/gamification";
 import { BADGES } from "@/lib/data";
-import { Film, Award, Zap, Flame, Trophy, Lock } from "lucide-react";
+
+// Mock data for demo
+const MOCK_USER = {
+  name: "Film Fan",
+  level: 3,
+  totalXP: 2450,
+  watchedCount: 24,
+  streak: "3 days",
+  title: "Film Enthusiast",
+};
+
+const MOCK_WATCHED_FILMS = [
+  {
+    id: "the-godfather",
+    title: "The Godfather",
+    year: 1972,
+    posterUrl: "https://image.tmdb.org/t/p/w500/3bhkrj58Vtu7enYsRolD1fZdja1.jpg",
+    watchedAt: "2026-04-03",
+    xpEarned: 150,
+  },
+  {
+    id: "the-dark-knight",
+    title: "The Dark Knight",
+    year: 2008,
+    posterUrl: "https://image.tmdb.org/t/p/w500/qJ2tW1Warb1XZHRFiSsEifwqFHE.jpg",
+    watchedAt: "2026-04-01",
+    xpEarned: 150,
+  },
+  {
+    id: "pulp-fiction",
+    title: "Pulp Fiction",
+    year: 1994,
+    posterUrl: "https://image.tmdb.org/t/p/w500/d5iIl40f9vCNlbGanyiASq9JKaY.jpg",
+    watchedAt: "2026-03-28",
+    xpEarned: 150,
+  },
+  {
+    id: "inception",
+    title: "Inception",
+    year: 2010,
+    posterUrl: "https://image.tmdb.org/t/p/w500/edv5CZvWj09upOsy2Y6IwDhK8bt.jpg",
+    watchedAt: "2026-03-25",
+    xpEarned: 100,
+  },
+];
+
+const EARNED_BADGE_SLUGS = ["first-film", "ten-films", "oscar-collector"];
 
 export default async function DashboardPage() {
-  const session = await auth();
-  if (!session?.user) redirect("/api/auth/signin");
-
-  const watchedFilms = await prisma.watchedFilm.findMany({
-    where: { userId: session.user.id },
-    include: { film: true },
-    orderBy: { watchedAt: "desc" },
-  });
-
-  const totalXP = watchedFilms.reduce((sum, wf) => sum + wf.xpEarned, 0);
+  const totalXP = MOCK_USER.totalXP;
   const level = getLevel(totalXP);
   const progress = getXPProgress(totalXP);
   const title = getLevelTitle(level);
-
-  const userBadges = await prisma.userBadge.findMany({
-    where: { userId: session.user.id },
-    include: { badge: true },
-  });
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* Header */}
       <div className="flex items-center gap-4 mb-8">
-        {session.user.image ? (
-          <img src={session.user.image} alt={session.user.name || ""} className="w-16 h-16 rounded-full border-2 border-gold" />
-        ) : (
-          <div className="w-16 h-16 rounded-full bg-card border-2 border-gold flex items-center justify-center">
-            <span className="text-2xl font-bold text-gold">{session.user.name?.[0] || "?"}</span>
-          </div>
-        )}
+        <div className="w-16 h-16 rounded-full bg-card border-2 border-gold flex items-center justify-center">
+          <span className="text-2xl font-bold text-gold">{MOCK_USER.name[0]}</span>
+        </div>
         <div>
-          <h1 className="text-2xl font-bold text-white">{session.user.name}</h1>
+          <h1 className="text-2xl font-bold text-white">{MOCK_USER.name}</h1>
           <p className="text-gold text-sm">{title}</p>
         </div>
       </div>
@@ -78,9 +104,9 @@ export default async function DashboardPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
         {[
-          { label: "Films Watched", value: watchedFilms.length, icon: Film },
-          { label: "Current Streak", value: "3 days", icon: Flame },
-          { label: "Badges Earned", value: userBadges.length, icon: Award },
+          { label: "Films Watched", value: MOCK_USER.watchedCount, icon: Film },
+          { label: "Current Streak", value: MOCK_USER.streak, icon: Flame },
+          { label: "Badges Earned", value: EARNED_BADGE_SLUGS.length, icon: Award },
           { label: "Total XP", value: totalXP, icon: Zap },
         ].map(({ label, value, icon: Icon }) => (
           <div key={label} className="bg-card border border-border rounded-lg p-4">
@@ -98,7 +124,7 @@ export default async function DashboardPage() {
         <h2 className="text-xl font-bold text-white mb-4">Badges</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
           {BADGES.map((badge) => {
-            const earned = userBadges.some((ub) => ub.badge.slug === badge.slug);
+            const earned = EARNED_BADGE_SLUGS.includes(badge.slug);
             return (
               <div
                 key={badge.slug}
@@ -118,25 +144,23 @@ export default async function DashboardPage() {
       </div>
 
       {/* Recently Watched */}
-      {watchedFilms.length > 0 && (
-        <div>
-          <h2 className="text-xl font-bold text-white mb-4">Recently Watched</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-            {watchedFilms.slice(0, 5).map(({ film, watchedAt, xpEarned }) => (
-              <div key={film.id} className="bg-card border border-border rounded-lg overflow-hidden">
-                {film.posterUrl && (
-                  <img src={film.posterUrl} alt={film.title} className="w-full aspect-[2/3] object-cover" />
-                )}
-                <div className="p-3">
-                  <div className="text-sm font-medium text-white truncate">{film.title}</div>
-                  <div className="text-xs text-textMuted">{new Date(watchedAt).toLocaleDateString()}</div>
-                  <div className="text-xs text-gold mt-1">+{xpEarned} XP</div>
-                </div>
+      <div>
+        <h2 className="text-xl font-bold text-white mb-4">Recently Watched</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+          {MOCK_WATCHED_FILMS.map((film) => (
+            <div key={film.id} className="bg-card border border-border rounded-lg overflow-hidden">
+              {film.posterUrl && (
+                <img src={film.posterUrl} alt={film.title} className="w-full aspect-[2/3] object-cover" />
+              )}
+              <div className="p-3">
+                <div className="text-sm font-medium text-white truncate">{film.title}</div>
+                <div className="text-xs text-textMuted">{film.watchedAt}</div>
+                <div className="text-xs text-gold mt-1">+{film.xpEarned} XP</div>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
-      )}
+      </div>
     </div>
   );
 }

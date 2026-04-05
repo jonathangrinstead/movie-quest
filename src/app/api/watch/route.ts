@@ -1,15 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { calculateXP } from "@/lib/gamification";
 import { FILMS } from "@/lib/data";
+import { calculateXP } from "@/lib/gamification";
+
+// Demo user ID - no auth required
+const DEMO_USER_ID = "demo-user-001";
 
 export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const { filmId } = await request.json();
   const film = FILMS.find((f) => f.id === filmId);
   if (!film) {
@@ -18,33 +14,12 @@ export async function POST(request: NextRequest) {
 
   const xpEarned = calculateXP(film);
 
-  // Upsert film in DB
-  let dbFilm = await prisma.film.findUnique({ where: { tmdbId: film.tmdbId } });
-  if (!dbFilm) {
-    dbFilm = await prisma.film.create({
-      data: {
-        tmdbId: film.tmdbId,
-        title: film.title,
-        year: film.year,
-        posterUrl: film.posterUrl,
-        backdropUrl: film.backdropUrl,
-        overview: film.overview,
-        runtime: film.runtime,
-        director: film.director,
-        tmdbRating: film.tmdbRating,
-        isOscarWinner: film.isOscarWinner,
-        genre: film.genre,
-        decade: film.decade,
-      },
-    });
-  }
-
-  // Upsert watched film
-  await prisma.watchedFilm.upsert({
-    where: { userId_filmId: { userId: session.user.id, filmId: dbFilm.id } },
-    update: {},
-    create: { userId: session.user.id, filmId: dbFilm.id, xpEarned },
+  // In demo mode, we just return success without persisting
+  // In a real app, this would save to the database
+  return NextResponse.json({ 
+    success: true, 
+    xpEarned,
+    userId: DEMO_USER_ID,
+    message: "Demo mode - film marked as watched" 
   });
-
-  return NextResponse.json({ success: true, xpEarned });
 }

@@ -1,18 +1,33 @@
-import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { Film, Trash2 } from "lucide-react";
+import { Film } from "lucide-react";
+
+// Mock watchlist data for demo
+const MOCK_WATCHLIST = [
+  {
+    id: "inception",
+    title: "Inception",
+    year: 2010,
+    posterUrl: "https://image.tmdb.org/t/p/w500/edv5CZvWj09upOsy2Y6IwDhK8bt.jpg",
+    addedAt: "2026-04-02",
+  },
+  {
+    id: "the-shawshank-redemption",
+    title: "The Shawshank Redemption",
+    year: 1994,
+    posterUrl: "https://image.tmdb.org/t/p/w500/q6y0Go1tsGEsmtFryQ3awq2NdC9.jpg",
+    addedAt: "2026-03-30",
+  },
+  {
+    id: "mad-max-fury-road",
+    title: "Mad Max: Fury Road",
+    year: 2015,
+    posterUrl: "https://image.tmdb.org/t/p/w500/8tZYtuWezp8JbcsvHYO0O46tFbo.jpg",
+    addedAt: "2026-03-28",
+  },
+];
 
 export default async function WatchlistPage() {
-  const session = await auth();
-  if (!session?.user) redirect("/api/auth/signin");
-
-  const watchlist = await prisma.watchlist.findMany({
-    where: { userId: session.user.id },
-    include: { film: true },
-    orderBy: { addedAt: "desc" },
-  });
+  const watchlist = MOCK_WATCHLIST;
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -29,7 +44,7 @@ export default async function WatchlistPage() {
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {watchlist.map(({ film, addedAt }) => (
+          {watchlist.map((film) => (
             <Link key={film.id} href={`/movies/${film.id}`} className="group">
               <div className="relative aspect-[2/3] rounded-lg overflow-hidden border border-border group-hover:border-gold transition-colors bg-card">
                 {film.posterUrl ? (
@@ -42,7 +57,7 @@ export default async function WatchlistPage() {
               </div>
               <div className="mt-2">
                 <div className="text-sm font-medium text-white truncate group-hover:text-gold transition-colors">{film.title}</div>
-                <div className="text-xs text-textMuted">Added {new Date(addedAt).toLocaleDateString()}</div>
+                <div className="text-xs text-textMuted">Added {film.addedAt}</div>
               </div>
             </Link>
           ))}

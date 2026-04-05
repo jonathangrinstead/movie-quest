@@ -1,26 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useSession } from "next-auth/react";
-import { signIn } from "next-auth/react";
 import { CheckCircle, Zap } from "lucide-react";
 
 export default function WatchButton({ filmId }: { filmId: string }) {
-  const { data: session } = useSession();
   const [watched, setWatched] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  if (!session) {
-    return (
-      <button
-        onClick={() => signIn("google")}
-        className="inline-flex items-center gap-2 bg-gold text-background px-6 py-3 rounded-lg font-semibold hover:bg-goldDim transition-colors"
-      >
-        <Zap size={18} />
-        Sign in to Track
-      </button>
-    );
-  }
 
   if (watched) {
     return (
